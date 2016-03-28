@@ -1,3 +1,5 @@
+import json
+
 import smart_open
 
 import config
@@ -22,25 +24,39 @@ class StreamingFile():
         self.resultset = resultset
         self.destination = filename
 
+    def makeJsonManifest(self, number_of_files):
+        # making manifest
+        urls = []
+        urls.append({'url': 's3://' + self.destination, 'mandatory': True})
+        for idx in range(number_of_files):
+            filename = self.destination + "." + str(idx)
+            urls.append({'url': 's3://' + filename, 'mandatory': True})
+        container = {}
+        container['entries'] = urls
+        return (str(json.dumps(container, sort_keys=False, indent=4)))
+
     def delimiterFile(self, row):
         line_rebuild = ''
         row_len = len(row) - 1
-        itemempy = False
+        itemNull = False
         for idx, item in enumerate(row):
             # print("column: %s, item: %s" % (idx,item))
 
             # if idx == 0 and item == 222:
             #    print("Debug - cheguei")
-            itemempy == False
-            if (item == None) or (item == '') or (item == ' '):
+            itemNull == False
+            if (item == None):
+                item = '\\N'
+            if (item == '') or (item == ' '):
+                #  NULL AS '\\N'
                 item = ''
-                itemempy = True
+                itemNull = True
 
             line_rebuild = line_rebuild + str(item).replace('\n', '\\n').replace('\r', '\\r').replace('\t', '\\t')
             if idx < row_len:
                 line_rebuild = line_rebuild + self.cfg_delimiter
             else:
-                if (itemempy == True):
+                if (itemNull == True):
                     line_rebuild = line_rebuild + '\\N'
         # print(line_rebuild)
         return (line_rebuild)
@@ -52,10 +68,14 @@ class StreamingFile():
         try:
             amount_line = 0
             with smart_open.smart_open(uri, 'wb') as fout:
-                for line in row:
-                    amount_line += 1
-                    fout.write(str(line) + '\n')
-            print("Sucessful file %s with %s lines" % (filename, str(amount_line)))
+                if type(row) is list or type(row) is tuple:
+                    for line in row:
+                        amount_line += 1
+                        fout.write(line + '\n')
+                else:
+                    fout.write(str(row) + '\n')
+                    # amount_line = len(row)
+            print("Sucessful file %s with %s bytes" % (filename, len(row)))
         except Exception as e:
             print(e)
 
@@ -121,7 +141,11 @@ class StreamingFile():
             elif self.cfg_method == 'local':
                 print("Streaming to Local")
                 self.saveLocalFile(rows, filename)
+
         rows.clear()
+        # Make Manifest File
+        manifest_file = self.destination + '.manifest'
+        json = []
 
-
+        self.savesS3(self.makeJsonManifest(file_index), manifest_file)
         # def makeManifest(self, filename):

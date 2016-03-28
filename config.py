@@ -22,15 +22,18 @@ pgsql1 = dict(
     tables='all',
 )
 
-pgsql2 = dict(
-    endpoint='db-analytics.vivareal.com',
-    login='pdi',
-    password='password',
-    database='analytics',
-    schema='dw',
-    tables='dw_cuenta',
-    tables_exclude='dw_listings, dw_inmuble'
-)
+# source = dict(
+#    source_engine='postgresql',
+#    endpoint='db-analytics.vivareal.com,
+#    login='pdi',
+#    password='password',
+#    database='analytics',
+#    schema='dw',
+#    tables=dict(
+#        custom_tables='dw_blacklist',
+#        exclude_tables='',
+#    )
+# )
 
 source = dict(
     source_engine='postgresql',
@@ -47,7 +50,7 @@ source = dict(
 
 streaming = dict(
     folder_or_bucket='vr-datanalytics-spool',
-    split_size=0,
+    split_size=30000,
     resultset_size=0,
     method='s3',
     delimiter='\t',

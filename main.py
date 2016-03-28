@@ -1,12 +1,10 @@
 from sqlalchemy import select
-from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.automap import automap_base
-from sqlalchemy.orm import sessionmaker
 
 # internal packages
 from tools.streaming import *
 from tools import ORMTools
-from aws.rds.rds import *
+from aws.redshift.redhisft import *
 
 
 class Main:
@@ -46,8 +44,8 @@ class Main:
             Session.configure(bind=self.engine)
             session = Session()
 
-            rds = RDS()
-            rds.cloneTable(str(table), self.metadata)
+            redshift = RedShift()
+            redshift.cloneTable(str(table), self.metadata)
 
             filename = self.destination + '/' + table + '.txt'
             print("Streaming resulset to filename %s" % filename)
@@ -57,6 +55,15 @@ class Main:
             print(e)
         finally:
             session.close()
+
+    def importRedShift(self, table):
+        manifest_file = ("%s/%s.txt.manifest") % (self.destination, table)
+        try:
+            redshift = RedShift()
+            redshift.importS3(table, manifest_file)
+        except (SQLAlchemyError, Exception) as e:
+            print("Erro na importação RDS para S3: %s" % e)
+
 
     def run(self):
         try:
@@ -80,10 +87,12 @@ class Main:
                         continue
 
                     self.processRDS(table)
+                    self.importRedShift(table)
             else:
                 for table in tables.split(','):
                     print("Processing custom tables... Table: %s" % table)
                     self.processRDS(table)
+                    self.importRedShift(table)
             conn.close()
 
         except (SQLAlchemyError, Exception) as e:
