@@ -30,7 +30,7 @@ source = dict(
     database='analytics',
     schema='dw',
     tables=dict(
-        custom_tables='dw_lead',
+        custom_tables='dw_cuenta',
         exclude_tables='',
     )
 )
