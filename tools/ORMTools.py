@@ -1,6 +1,6 @@
 # Constant
 def QUERY_LIMIT():
-    return "10000"
+    return int(10000)
 
 def page_query(q):
     offset = 0
