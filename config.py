@@ -1,23 +1,23 @@
 aws = dict(
-    acceskey="YourKey",
-    secretkey="YouSecret",
+    acceskey="AKIAJSM7XAJXT3XF7YKA",
+    secretkey="CM+D3X4L/sUoHcyk8AITkz5+/d6NZ5ssgdA2Iih1",
     redshift=dict(
-        endpoint='RedShiftEndPoint',
+        endpoint='dw-redshift.vivareal.com',
         port='5439',
-        login='redshift_login',
-        password='redshiftpass',
-        database='dst_db',
+        login='pg_admin',
+        password='c4p4er9mbi5yncR',
+        database='analytics',
         schema='public,'
     ),
 )
 
 source = dict(
-    source_engine='postgresql',  # mysql or others...
-    endpoint='source_url',
-    login='source_login',
-    password='source_password',
-    database='source_database',
-    schema='source_schema',
+    source_engine='postgresql', #mysql or others...
+    endpoint='db-analytics.vivareal.com',
+    login='pdi',
+    password='password',
+    database='analytics',
+    schema='dw',
     tables=dict(
         custom_tables='',
         exclude_tables='',
@@ -25,7 +25,7 @@ source = dict(
 )
 
 streaming = dict(
-    folder_or_bucket='bucketS3',
+    folder_or_bucket='vr-datanalytics-spool',
     split_size=500000,  # 500k em lead
     resultset_size=0,
     method='s3',
