@@ -24,7 +24,7 @@ class RedShift:
             self.redshift_login, self.redshift_password, self.redshift_endpoint, self.redshift_database)
         print("Connectiong on RedShift: %s" % uri_engine)
         try:
-            self.redshift_engine = create_engine(uri_engine, echo=True)
+            self.redshift_engine = create_engine(uri_engine, echo=False)
             self.redshift_metadata = MetaData(bind=self.redshift_engine)
         except Exception as e:
             print("Error on connect redshift : %s" % e)
@@ -74,7 +74,7 @@ class RedShift:
             result = s.execute(strcopy)
             s.commit()
             # conn.execute(text(strcopy))
-            print(result)
+            # print(result)
 
         except (SQLAlchemyError, Exception) as e:
             print("Error on LOAD manifest %s: %s" % (manifest_file, e))

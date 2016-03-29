@@ -24,7 +24,7 @@ pgsql1 = dict(
 
 # source = dict(
 #    source_engine='postgresql',
-#    endpoint='db-analytics.vivareal.com,
+#    endpoint='db-analytics.vivareal.com',
 #    login='pdi',
 #    password='password',
 #    database='analytics',
@@ -33,24 +33,24 @@ pgsql1 = dict(
 #        custom_tables='dw_blacklist',
 #        exclude_tables='',
 #    )
-# )
+#)
 
-source = dict(
-    source_engine='postgresql',
-    endpoint='127.0.0.1',
-    login='pdi',
-    password='password',
-    database='analytics',
-    schema='dw',
-    tables=dict(
-        custom_tables='dw_blacklist',
-        exclude_tables='',
-    )
-)
+# source = dict(
+#    source_engine='postgresql',
+#    endpoint='127.0.0.1',
+#    login='pdi',
+#    password='password',
+#    database='analytics',
+#    schema='dw',
+#    tables=dict(
+#        custom_tables='dw_blacklist',
+#        exclude_tables='',
+#    )
+#)
 
 streaming = dict(
     folder_or_bucket='vr-datanalytics-spool',
-    split_size=30000,
+    split_size=250000,  # 250k em lead
     resultset_size=0,
     method='s3',
     delimiter='\t',

@@ -1,4 +1,4 @@
-query_limit = 2000
+query_limit = 10000
 
 
 def page_query(q):

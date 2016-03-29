@@ -50,6 +50,7 @@ class Main:
             filename = self.destination + '/' + table + '.txt'
             print("Streaming resulset to filename %s" % filename)
             streaming = StreamingFile(ORMTools.page_query(session.query(t)), filename)
+            streaming.cleanFolder(table)
             streaming.save()
         except (SQLAlchemyError, Exception) as e:
             print(e)
@@ -101,5 +102,8 @@ class Main:
 
 ## Implementar controle de menu..
 if __name__ == "__main__":
+    # logging.basicConfig(level=logging.INFO)
+    # logger = logging.getLogger(__name__)
+
     app = Main()
     app.run()
