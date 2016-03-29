@@ -92,7 +92,7 @@ class StreamingFile():
         print("Salving data on bucket %s" % filename)
         try:
             amount_line = 0
-            with smart_open.smart_open(uri, 'wb') as fout:
+            with smart_open(uri, 'wb') as fout:
                 if type(row) is list or type(row) is tuple:
                     for line in row:
                         amount_line += 1

@@ -1,4 +1,6 @@
 # http://docs.sqlalchemy.org/en/latest/core/compiler.html
+import sys
+
 from sqlalchemy import create_engine, Table, Column, MetaData, String
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker
@@ -46,7 +48,9 @@ class RedShift:
                 print("cheguei...")
             if ("varchar" in str(column.type).lower()) or ("text" in str(column.type).lower()) or (
                 "json" in str(column.type).lower()):
-                print("Change column type  of %s from  %s to VARCHAR(65535)" % (str(column), str(column.type)))
+                msg = "\r ->Change column type  of %s from  %s to VARCHAR(65535)" % (str(column), str(column.type))
+                sys.stdout.write(msg)
+                sys.stdout.flush()
                 custom_column = Column(str(column).split('.')[1], String(65535))
                 destTable.append_column(custom_column)
             else:
