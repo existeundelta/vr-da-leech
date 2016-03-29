@@ -53,7 +53,7 @@ streaming = dict(
     split_size=250000,  # 250k em lead
     resultset_size=0,
     method='s3',
-    delimiter='\t',
+    delimiter=';',
     thread='3',
 
 )

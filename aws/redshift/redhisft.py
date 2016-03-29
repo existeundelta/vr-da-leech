@@ -18,6 +18,7 @@ class RedShift:
     redshift_password = config.aws['redshift']['password']
     redshift_database = config.aws['redshift']['database']
     redshift_schema = config.aws['redshift']['schema']
+    cfg_delimiter = config.streaming['delimiter']
     redshift_engine = None
     redshift_metadata = None
 
@@ -61,10 +62,14 @@ class RedShift:
         aws_accss_key_if = config.aws['acceskey']
         aws_secret_acces_key = config.aws['secretkey']
 
+        delimiter = self.cfg_delimiter
+        if self.cfg_delimiter == '\t':
+            delimiter = '\\t'
+
         strcopy = "copy %s from 's3://%s'  " \
                   "credentials 'aws_access_key_id=%s;aws_secret_access_key=%s' " \
-                  "delimiter '\\t' NULL as '\\N' timeformat 'auto' manifest;" % (
-                  table, manifest_file, aws_accss_key_if, aws_secret_acces_key)
+                  "delimiter '%s' NULL as '\\N' timeformat 'auto' manifest;" % (
+                      table, manifest_file, aws_accss_key_if, aws_secret_acces_key, delimiter)
 
         try:
             # conn = self.redshift_engine.connect()
