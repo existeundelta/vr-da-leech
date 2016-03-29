@@ -1,4 +1,5 @@
 # Constant
+
 def QUERY_LIMIT():
     return int(10000)
 

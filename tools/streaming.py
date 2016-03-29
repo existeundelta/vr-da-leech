@@ -16,6 +16,7 @@ class StreamingFile():
     cfg_delimiter = config.streaming['delimiter']
     cfg_method = config.streaming['method']
     cfg_folder_bucket = config.streaming['folder_or_bucket']
+    cfg_streaming_thread = config.streaming['thread']
 
     destination = None
     delimiter = None
@@ -67,7 +68,8 @@ class StreamingFile():
         try:
             bucket = boto.connect_s3(self.aws_access_key_id, self.aws_secret_access_key).get_bucket(
                 self.cfg_folder_bucket)
-            for key, content in s3_iter_bucket(bucket, accept_key=lambda key: key.startswith(filename), workers=30):
+            for key, content in s3_iter_bucket(bucket, accept_key=lambda key: key.startswith(filename),
+                                               workers=int(self.cfg_streaming_thread)):
                 # t = threading.Thread(target=self.animate("Deleting  S3 files: ", str(key) + " size: " + str(len(content)) + " bytes"))
                 # t.start()
                 msg = "\r -> Deleting S3 Files: %s " % str(key)
