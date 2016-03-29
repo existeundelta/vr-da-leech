@@ -30,7 +30,7 @@ source = dict(
     database='analytics',
     schema='dw',
     tables=dict(
-        custom_tables='dw_cuenta',
+        custom_tables='',
         exclude_tables='',
     )
 )
@@ -38,10 +38,9 @@ source = dict(
 
 streaming = dict(
     folder_or_bucket='vr-datanalytics-spool',
-    split_size=250000,  # 250k em lead
+    split_size=500000,  # 500k em lead
     resultset_size=0,
     method='s3',
     delimiter=';',
     thread='3',
-
 )

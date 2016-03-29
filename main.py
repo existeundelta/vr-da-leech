@@ -68,6 +68,11 @@ class Main:
         try:
             conn = self.engine.connect()
 
+            # print()
+            # print("Clean all old export file")
+            # old_files = StreamingFile()
+            # old_files.cleanALL()
+
             tables = config.source['tables']['custom_tables']
             if tables == '' or tables == None:
                 print("Load Source tables...")
@@ -86,7 +91,7 @@ class Main:
                         continue
 
                     self.exportData(table)
-                    # self.importRedShift(table)
+                    self.importRedShift(table)
             else:
                 for table in tables.split(','):
                     print("Processing custom tables... Table: %s" % table)

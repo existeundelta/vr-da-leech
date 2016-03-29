@@ -18,7 +18,8 @@ class RedShift:
     redshift_password = config.aws['redshift']['password']
     redshift_database = config.aws['redshift']['database']
     redshift_schema = config.aws['redshift']['schema']
-    cfg_delimiter = config.streaming['delimiter']
+    # cfg_delimiter = config.streaming['delimiter']
+    cfg_delimiter = ';'  # hard code
     redshift_engine = None
     redshift_metadata = None
 
@@ -39,9 +40,12 @@ class RedShift:
 
         # Drop if exist
         try:
+            print()
+            print("Trying to drop table %s if exists" % table_name)
             destTable.drop(self.redshift_engine)
         except SQLAlchemyError as e:
-            print("Error on drop table: %s" % e)
+            print()
+            print("Ok... table not exists... cannot drop it")
 
         print("Creating table %s on RedShift" % table_name)
         for column in srcTable.columns:
@@ -66,9 +70,10 @@ class RedShift:
         if self.cfg_delimiter == '\t':
             delimiter = '\\t'
 
+
         strcopy = "copy %s from 's3://%s'  " \
                   "credentials 'aws_access_key_id=%s;aws_secret_access_key=%s' " \
-                  "delimiter '%s' NULL as '\\N' timeformat 'auto' manifest;" % (
+                  "format delimiter '%s' timeformat 'auto' removequotes  manifest;" % (
                       table, manifest_file, aws_accss_key_if, aws_secret_acces_key, delimiter)
 
         try:
@@ -78,12 +83,15 @@ class RedShift:
 
             s = Session()
             print()
+            print('-----')
             print("Runing COPY FROM manifest file %s " % manifest_file)
             # time.sleep(5)
             result = s.execute(strcopy)
             s.commit()
             # conn.execute(text(strcopy))
             # print(result)
+            print("Cool... Imported with successful :)")
+            print('-----')
 
         except (SQLAlchemyError, Exception) as e:
             print("Error on LOAD manifest %s: %s" % (manifest_file, e))

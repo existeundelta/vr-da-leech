@@ -46,21 +46,17 @@ class StreamingFile():
             # if idx == 0 and item == 222:
             #    print("Debug - cheguei")
             itemNull == False
-            if (item == None):
-                item = '\\N'
-            if (item == '') or (item == ' '):
-                #  NULL AS '\\N'
+            if (item == None) or (item == ''):
                 item = ''
-                itemNull = True
             if not str(item).isdigit():
                 item = '"{}"'.format(item)
 
             line_rebuild = line_rebuild + str(item).replace('\n', '\\n').replace('\r', '\\r').replace('\t', '\\t')
             if idx < row_len:
                 line_rebuild = line_rebuild + self.cfg_delimiter
-            else:
-                if (itemNull == True):
-                    line_rebuild = line_rebuild + '\\N'
+                # else:
+                #    if (itemNull == True):
+                #        line_rebuild = line_rebuild + '\\N'
         # print(line_rebuild)
         return (line_rebuild)
 
@@ -79,13 +75,25 @@ class StreamingFile():
                 sys.stdout.flush()
                 key.delete()
             self.processing_finished = True
+            print("")
         except (BotoServerError, BotoClientError, S3ResponseError, Exception) as e:
             print("Error on delete %s: " % e)
 
+    def cleanS3ALL(self):
+        bucket = boto.connect_s3(self.aws_access_key_id, self.aws_secret_access_key).get_bucket(
+            self.cfg_folder_bucket)
+        bucketListResultSet = bucket.list()
+        for key in bucketListResultSet:
+            bucket.delete_keys(key.name)
+            print("%s deleted..." % key.name)
 
     def cleanFolder(self, filename):
         if self.cfg_method == 's3':
             self.cleanS3(filename)
+
+    def cleanALL(self):
+        if self.cfg_method == 's3':
+            self.cleanS3ALL()
 
 
     def savesS3(self, row, filename):
@@ -134,6 +142,7 @@ class StreamingFile():
             # If i want limit into number of sources row
             resultset_line += 1
             if (self.cfg_resultset_size != 0) and (resultset_line > self.cfg_resultset_size):
+                print("")
                 print("Resulset limited by resultset_size... Exiting")
                 break
 
@@ -164,6 +173,7 @@ class StreamingFile():
 
         # If my rows list is not empty, so i need streaming to new file with the final data.
         if len(rows) > 0:
+            print("")
             print("salva o resto...  %s linhas" % len(rows))
             if file_index > 0:
                 file_index += 1
