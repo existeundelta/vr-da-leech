@@ -1,4 +1,4 @@
-# Data Leech :) as
+# Data Leech :)
 
 ### Why ?
 
