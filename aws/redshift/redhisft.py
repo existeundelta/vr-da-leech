@@ -63,7 +63,8 @@ class RedShift:
 
         strcopy = "copy %s from 's3://%s'  " \
                   "credentials 'aws_access_key_id=%s;aws_secret_access_key=%s' " \
-                  "delimiter '\\t' manifest;" % (table, manifest_file, aws_accss_key_if, aws_secret_acces_key)
+                  "delimiter '\\t' NULL as \\N timeformat 'auto' manifest;" % (
+                  table, manifest_file, aws_accss_key_if, aws_secret_acces_key)
 
         try:
             # conn = self.redshift_engine.connect()
