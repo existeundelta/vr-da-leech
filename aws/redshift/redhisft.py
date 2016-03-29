@@ -77,6 +77,7 @@ class RedShift:
             # text(strcopy)
 
             s = Session()
+            print()
             print("Runing COPY FROM manifest file %s " % manifest_file)
             # time.sleep(5)
             result = s.execute(strcopy)

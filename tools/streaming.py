@@ -36,7 +36,7 @@ class StreamingFile():
         container['entries'] = urls
         return (str(json.dumps(container, sort_keys=False, indent=4)))
 
-    def delimiterFile(self, row):
+    def formatROW(self, row):
         line_rebuild = ''
         row_len = len(row) - 1
         itemNull = False
@@ -52,6 +52,8 @@ class StreamingFile():
                 #  NULL AS '\\N'
                 item = ''
                 itemNull = True
+            if not item.isdigit():
+                item.join('"')
 
             line_rebuild = line_rebuild + str(item).replace('\n', '\\n').replace('\r', '\\r').replace('\t', '\\t')
             if idx < row_len:
@@ -127,7 +129,7 @@ class StreamingFile():
         filename = self.destination
         for row in self.resultset:
             # converting database row to delimited text row
-            row = self.delimiterFile(row)
+            row = self.formatROW(row)
 
             # If i want limit into number of sources row
             resultset_line += 1

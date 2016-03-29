@@ -35,18 +35,6 @@ source = dict(
     )
 )
 
-# source = dict(
-#    source_engine='postgresql',
-#    endpoint='127.0.0.1',
-#    login='pdi',
-#    password='password',
-#    database='analytics',
-#    schema='dw',
-#    tables=dict(
-#        custom_tables='dw_blacklist',
-#        exclude_tables='',
-#    )
-#)
 
 streaming = dict(
     folder_or_bucket='vr-datanalytics-spool',
