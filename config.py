@@ -22,18 +22,18 @@ pgsql1 = dict(
     tables='all',
 )
 
-# source = dict(
-#    source_engine='postgresql',
-#    endpoint='db-analytics.vivareal.com',
-#    login='pdi',
-#    password='password',
-#    database='analytics',
-#    schema='dw',
-#    tables=dict(
-#        custom_tables='dw_blacklist',
-#        exclude_tables='',
-#    )
-#)
+source = dict(
+    source_engine='postgresql',
+    endpoint='db-analytics.vivareal.com',
+    login='pdi',
+    password='password',
+    database='analytics',
+    schema='dw',
+    tables=dict(
+        custom_tables='dw_lead',
+        exclude_tables='',
+    )
+)
 
 # source = dict(
 #    source_engine='postgresql',

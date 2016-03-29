@@ -37,18 +37,16 @@ class RedShift:
         # Drop if exist
         try:
             destTable.drop(self.redshift_engine)
-        except:
-            print("Table not exist to drop")
+        except SQLAlchemyError as e:
+            print("Error on drop table: %s" % e)
 
-        # copy schema and create newTable from oldTable
+        print("Creating table %s on RedShift" % table_name)
         for column in srcTable.columns:
-            print("Original: %s é do tipo: %s" % (str(column), str(column.type)))
             if (str(column) == "dw_blacklist.tipo"):
                 print("cheguei...")
-            if "varchar" in str(column.type).lower():  # if isinstance(column.type, types.DATETIME):
-                custom_column = Column(str(column).split('.')[1], String(65535))
-                destTable.append_column(custom_column)
-            elif "text" in str(column.type).lower() or "json" in str(column.type).lower():
+            if ("varchar" in str(column.type).lower()) or ("text" in str(column.type).lower()) or (
+                "json" in str(column.type).lower()):
+                print("Change column type  of %s from  %s to VARCHAR(65535)" % (str(column), str(column.type)))
                 custom_column = Column(str(column).split('.')[1], String(65535))
                 destTable.append_column(custom_column)
             else:

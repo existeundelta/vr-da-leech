@@ -32,7 +32,7 @@ class Main:
         self.engine = create_engine(uri_engine, echo=False)
         self.metadata = MetaData(bind=self.engine, schema=self.source_schema)
 
-    def processRDS(self, table):
+    def exportData(self, table):
         t = Table(str(table), self.metadata, autoload=True, schema=self.source_schema)
         s = select([t])
 
@@ -43,15 +43,12 @@ class Main:
             Session = sessionmaker()
             Session.configure(bind=self.engine)
             session = Session()
-
-            redshift = RedShift()
-            redshift.cloneTable(str(table), self.metadata)
-
             filename = self.destination + '/' + table + '.txt'
-            print("Streaming resulset to filename %s" % filename)
-            streaming = StreamingFile(ORMTools.page_query(session.query(t)), filename)
+            streaming = StreamingFile()
+            print("Clean spool folder...")
             streaming.cleanFolder(table)
-            streaming.save()
+            print("Streaming resulset to filename %s" % filename)
+            streaming.save(ORMTools.page_query(session.query(t)), filename)
         except (SQLAlchemyError, Exception) as e:
             print(e)
         finally:
@@ -61,6 +58,7 @@ class Main:
         manifest_file = ("%s/%s.txt.manifest") % (self.destination, table)
         try:
             redshift = RedShift()
+            redshift.cloneTable(str(table), self.metadata)
             redshift.importS3(table, manifest_file)
         except (SQLAlchemyError, Exception) as e:
             print("Erro na importação RDS para S3: %s" % e)
@@ -87,12 +85,12 @@ class Main:
                     if table in config.source['tables']['exclude_tables']:
                         continue
 
-                    self.processRDS(table)
-                    self.importRedShift(table)
+                    self.exportData(table)
+                    # self.importRedShift(table)
             else:
                 for table in tables.split(','):
                     print("Processing custom tables... Table: %s" % table)
-                    self.processRDS(table)
+                    self.exportData(table)
                     self.importRedShift(table)
             conn.close()
 

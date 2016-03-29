@@ -1,10 +1,4 @@
-import itertools
-import json
-import sys
-import threading
-import time
-
-import boto
+from boto.exception import *
 from smart_open import *
 
 import config
@@ -27,9 +21,8 @@ class StreamingFile():
     delimiter = None
     processing_finished = False
 
-    def __init__(self, resultset, filename):
-        self.resultset = resultset
-        self.destination = filename
+    def __init__(self):
+        None
 
     def makeJsonManifest(self, number_of_files):
         # making manifest
@@ -68,23 +61,23 @@ class StreamingFile():
         # print(line_rebuild)
         return (line_rebuild)
 
-    def animate(self, msg, extrainfo):
-        for c in itertools.cycle(['|', '/', '-', '\\']):
-            if self.processing_finished:
-                break
-            sys.stdout.write('\r%s %s  -  %s' % (msg, c, extrainfo))
-            sys.stdout.flush()
-            time.sleep(0.1)
-        sys.stdout.write('\rDone!     ')
-
     def cleanS3(self, filename=None):
         self.processing_finished = False
-        bucket = boto.connect_s3(self.aws_access_key_id, self.aws_secret_access_key).get_bucket(self.cfg_folder_bucket)
-        for key, content in s3_iter_bucket(bucket, accept_key=lambda key: key.startswith(filename)):
-            t = threading.Thread(target=self.animate("Deleting  S3 files: ", str(key) + " size: " + len(content)))
-            t.start()
-            bucket.delete(key)
-        self.processing_finished = True
+        mgs = "Deleting  S3 files: "
+        try:
+            bucket = boto.connect_s3(self.aws_access_key_id, self.aws_secret_access_key).get_bucket(
+                self.cfg_folder_bucket)
+            for key, content in s3_iter_bucket(bucket, accept_key=lambda key: key.startswith(filename), workers=30):
+                # t = threading.Thread(target=self.animate("Deleting  S3 files: ", str(key) + " size: " + str(len(content)) + " bytes"))
+                # t.start()
+                msg = "\r -> Deleting S3 Files: %s " % str(key)
+                sys.stdout.write(msg)
+                sys.stdout.flush()
+                key.delete()
+            self.processing_finished = True
+        except (BotoServerError, BotoClientError, S3ResponseError, Exception) as e:
+            print("Error on delete %s: " % e)
+
 
     def cleanFolder(self, filename):
         if self.cfg_method == 's3':
@@ -97,10 +90,6 @@ class StreamingFile():
         print("Salving data on bucket %s" % filename)
         try:
             amount_line = 0
-            # Processing animation thread
-            self.processing_finished = False
-            t = threading.Thread(target=self.animate("Saving in S3: ", str(amount_line) + " rows saved"))
-            t.start()
             with smart_open.smart_open(uri, 'wb') as fout:
                 if type(row) is list or type(row) is tuple:
                     for line in row:
@@ -110,7 +99,7 @@ class StreamingFile():
                     fout.write(str(row) + '\n')
                     # amount_line = len(row)
             print("Sucessful file %s with %s bytes" % (filename, len(row)))
-            self.processing_finished = True
+            #self.processing_finished = True
         except Exception as e:
             print(e)
 
@@ -125,7 +114,10 @@ class StreamingFile():
         except Exception as e:
             print(e)
 
-    def save(self):
+    def save(self, resultset, filename):
+        self.resultset = resultset
+        self.destination = filename
+
         rows = []
         file_index = 0
         row_size = 0
@@ -150,7 +142,9 @@ class StreamingFile():
                 if row_size < self.cfg_split_size:
                     rows.append((row))
                     row_size = row_size + 1
-                    print("Export line: %s" % str(row_size))
+                    msg = "\r -> Export line number: %s" % str(row_size)
+                    sys.stdout.write(msg)
+                    sys.stdout.flush()
                 else:
                     if file_index > 0:
                         filename = self.destination + "." + str(file_index)
