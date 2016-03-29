@@ -1,43 +1,31 @@
 aws = dict(
-    region='us-east-1',
-    region_endpoint='apigateway.us-east-1.amazonaws.com',
-    acceskey="AKIAJSM7XAJXT3XF7YKA",
-    secretkey="CM+D3X4L/sUoHcyk8AITkz5+/d6NZ5ssgdA2Iih1",
+    acceskey="YourKey",
+    secretkey="YouSecret",
     redshift=dict(
-        endpoint='dw-redshift.vivareal.com',
+        endpoint='RedShiftEndPoint',
         port='5439',
-        login='pg_admin',
-        password='c4p4er9mbi5yncR',
-        database='analytics',
+        login='redshift_login',
+        password='redshiftpass',
+        database='dst_db',
         schema='public,'
     ),
 )
 
-pgsql1 = dict(
-    endpoint='dbslave.vivareal.com',
-    login='vivareal',
-    password='jp03e4S!',
-    database='vivareal',
-    schema='public',
-    tables='all',
-)
-
 source = dict(
-    source_engine='postgresql',
-    endpoint='db-analytics.vivareal.com',
-    login='pdi',
-    password='password',
-    database='analytics',
-    schema='dw',
+    source_engine='postgresql',  # mysql or others...
+    endpoint='source_url',
+    login='source_login',
+    password='source_password',
+    database='source_database',
+    schema='source_schema',
     tables=dict(
         custom_tables='',
         exclude_tables='',
     )
 )
 
-
 streaming = dict(
-    folder_or_bucket='vr-datanalytics-spool',
+    folder_or_bucket='bucketS3',
     split_size=500000,  # 500k em lead
     resultset_size=0,
     method='s3',
