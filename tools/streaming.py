@@ -52,8 +52,8 @@ class StreamingFile():
                 #  NULL AS '\\N'
                 item = ''
                 itemNull = True
-            if not item.isdigit():
-                item.join('"')
+            if not str(item).isdigit():
+                item = '"{}"'.format(item)
 
             line_rebuild = line_rebuild + str(item).replace('\n', '\\n').replace('\r', '\\r').replace('\t', '\\t')
             if idx < row_len:
