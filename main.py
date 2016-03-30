@@ -1,6 +1,6 @@
-from sqlalchemy import select
-from sqlalchemy.ext.automap import automap_base
+import threading
 
+from sqlalchemy.ext.automap import automap_base
 # internal packages
 from tools.streaming import *
 from tools import ORMTools
@@ -18,6 +18,7 @@ class Main:
     method = config.streaming['method']
     delimiter = config.streaming['delimiter']
     destination = config.streaming['folder_or_bucket']
+    cfg_thread_number = config.streaming['thread']
     engine = None
 
     def __init__(self):
@@ -34,10 +35,9 @@ class Main:
 
     def exportData(self, table):
         t = Table(str(table), self.metadata, autoload=True, schema=self.source_schema)
-        s = select([t])
 
         ## get all the results in a list of tuples
-        conn = self.engine.connect()
+        exported = False
         try:
             # configure Session class with desired options
             Session = sessionmaker()
@@ -48,14 +48,15 @@ class Main:
             print("Clean spool folder...")
             streaming.cleanFolder(table)
             print("Streaming resulset to filename %s" % filename)
-            streaming.save(ORMTools.page_query(session.query(t)), filename)
+            exported = streaming.save(ORMTools.page_query(session.query(t)), filename)
         except (SQLAlchemyError, Exception) as e:
             print(e)
         finally:
             session.close()
+            return exported
 
     def importRedShift(self, table):
-        manifest_file = ("%s/%s.txt.manifest") % (self.destination, table)
+        manifest_file = "%s/%s.txt.manifest" % (self.destination, table)
         try:
             redshift = RedShift()
             redshift.cloneTable(str(table), self.metadata)
@@ -63,50 +64,82 @@ class Main:
         except (SQLAlchemyError, Exception) as e:
             print("Erro na importação RDS para S3: %s" % e)
 
+    def processAll(self, table):
+        if self.exportData(table):
+            self.importRedShift(table)
+        else:
+            print("Cannot export export data from table %s " % table)
 
     def run(self):
         try:
-            conn = self.engine.connect()
-
-            # print()
-            # print("Clean all old export file")
-            # old_files = StreamingFile()
-            # old_files.cleanALL()
-
             tables = config.source['tables']['custom_tables']
+
             if tables == '' or tables == None:
-                print("Load Source tables...")
+                print("Load Source tables... please wait...")
                 ## AutoMap
+                # conn = self.engine.connect()
                 self.metadata.reflect(self.engine)  # get columns from existing table
                 Base = automap_base(bind=self.engine, metadata=self.metadata)
                 Base.prepare(self.engine, reflect=True)
                 MetaTable = Base.metadata.tables
 
+                # I will working with threads here...
+                thread_list = []
+                if str(self.cfg_thread_number).isdigit() or (not self.cfg_thread_number == '') or (
+                not self.cfg_thread_number == None):
+                    if int(self.cfg_thread_number) > 0:
+                        # Making list of threads with for all tables...
+                        for table in MetaTable.keys():
+                            if '.' in table:
+                                table = str(table).split('.')[1]
+
+                            if table in config.source['tables']['exclude_tables']:
+                                continue
+
+                            print("Preparing thread to table %s " % table)
+                            # t = Thread(target=self.processAll, args=(table))
+                            t = threading.Thread(target=self.processAll, args=(table,))
+                            thread_list.append(t)
+
+                        # And now I will processing step by step in rule of cfg_thread_number...
+                        threads_running = []
+                        amount_threads_running = 0
+                        for thread in thread_list:
+                            if int(self.cfg_thread_number) > amount_threads_running:
+                                print("Processing thread  %s in paralell " % amount_threads_running)
+                                thread.start()
+                                threads_running.append(thread)
+                                amount_threads_running += 1
+                            else:
+                                for running in threads_running:
+                                    if running.isAlive():
+                                        print("Waiting thread %s finish" % amount_threads_running)
+                                        running.join()
+                                        amount_threads_running -= 1
+                                    else:
+                                        amount_threads_running -= 1
+                                        continue
+                                threads_running.clear()
+                        exit(0)  # Happy end...
+
+                # Without Threads...  Working in sequencial mode...
                 for table in MetaTable.keys():
-                    print(table)
+                    print("Prepara processing in table %s " % table)
                     if '.' in table:
                         table = str(table).split('.')[1]
 
                     if table in config.source['tables']['exclude_tables']:
                         continue
+                    self.processAll(table)
 
-                    self.exportData(table)
-                    self.importRedShift(table)
             else:
                 for table in tables.split(','):
                     print("Processing custom tables... Table: %s" % table)
-                    self.exportData(table)
-                    self.importRedShift(table)
-            conn.close()
-
+                    self.processAll(table)
         except (SQLAlchemyError, Exception) as e:
             print("Error: %s" % e)
 
 
-## Implementar controle de menu..
 if __name__ == "__main__":
-    # logging.basicConfig(level=logging.INFO)
-    # logger = logging.getLogger(__name__)
-
     app = Main()
     app.run()

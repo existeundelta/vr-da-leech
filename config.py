@@ -26,9 +26,9 @@ source = dict(
 
 streaming = dict(
     folder_or_bucket='vr-datanalytics-spool',
-    split_size=500000,  # 500k em lead
-    resultset_size=0,
-    method='s3', # S3 or Local 
+    split_size=1000000,  # 1M em lead
+    resultset_size=10,
+    method='s3',  # S3 or Local
     delimiter=';',
-    thread='3',
+    thread='0',
 )

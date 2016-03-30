@@ -22,9 +22,6 @@ class StreamingFile():
     delimiter = None
     processing_finished = False
 
-    def __init__(self):
-        None
-
     def makeJsonManifest(self, number_of_files):
         # making manifest
         urls = []
@@ -45,7 +42,6 @@ class StreamingFile():
 
             # if idx == 0 and item == 222:
             #    print("Debug - cheguei")
-            itemNull == False
             if (item == None) or (item == ''):
                 item = ''
             if not str(item).isdigit():
@@ -54,15 +50,10 @@ class StreamingFile():
             line_rebuild = line_rebuild + str(item).replace('\n', '\\n').replace('\r', '\\r').replace('\t', '\\t')
             if idx < row_len:
                 line_rebuild = line_rebuild + self.cfg_delimiter
-                # else:
-                #    if (itemNull == True):
-                #        line_rebuild = line_rebuild + '\\N'
-        # print(line_rebuild)
         return (line_rebuild)
 
     def cleanS3(self, filename=None):
         self.processing_finished = False
-        mgs = "Deleting  S3 files: "
         try:
             bucket = boto.connect_s3(self.aws_access_key_id, self.aws_secret_access_key).get_bucket(
                 self.cfg_folder_bucket)
@@ -135,7 +126,9 @@ class StreamingFile():
         row_size = 0
         resultset_line = 0
         filename = self.destination
+        saved = False
         for row in self.resultset:
+            saved = True
             # converting database row to delimited text row
             row = self.formatROW(row)
 
@@ -162,10 +155,12 @@ class StreamingFile():
                     if file_index > 0:
                         filename = self.destination + "." + str(file_index)
                     if self.cfg_method == 's3':
-                        print("Save in S3")
+                        print()
+                        print("Saving in S3...")
                         self.savesS3(rows, filename)
                     elif self.cfg_method == 'local':
-                        print("Save in local")
+                        print()
+                        print("Saving in local...")
                         self.saveLocalFile(rows, filename)
                     row_size = 0
                     file_index += 1
@@ -188,8 +183,6 @@ class StreamingFile():
         rows.clear()
         # Make Manifest File
         manifest_file = self.destination + '.manifest'
-        json = []
-
         self.savesS3(self.makeJsonManifest(file_index), manifest_file)
         # def makeManifest(self, filename):
-
+        return saved

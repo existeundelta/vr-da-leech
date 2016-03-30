@@ -43,7 +43,7 @@ class RedShift:
             print()
             print("Trying to drop table %s if exists" % table_name)
             destTable.drop(self.redshift_engine)
-        except SQLAlchemyError as e:
+        except SQLAlchemyError:
             print()
             print("Ok... table not exists... cannot drop it")
 
@@ -86,11 +86,11 @@ class RedShift:
             print('-----')
             print("Runing COPY FROM manifest file %s " % manifest_file)
             # time.sleep(5)
-            result = s.execute(strcopy)
+            s.execute(strcopy)
             s.commit()
             # conn.execute(text(strcopy))
             # print(result)
-            print("Cool... Imported with successful :)")
+            print("Cool... Table %s Imported with successful :)", table)
             print('-----')
 
         except (SQLAlchemyError, Exception) as e:
