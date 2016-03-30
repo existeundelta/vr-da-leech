@@ -90,7 +90,7 @@ class RedShift:
             s.commit()
             # conn.execute(text(strcopy))
             # print(result)
-            print("Cool... Table %s Imported with successful :)", table)
+            print("Cool... Table %s Imported with successful :)" % table)
             print('-----')
 
         except (SQLAlchemyError, Exception) as e:

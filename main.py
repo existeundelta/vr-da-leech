@@ -55,20 +55,26 @@ class Main:
             session.close()
             return exported
 
-    def importRedShift(self, table):
-        manifest_file = "%s/%s.txt.manifest" % (self.destination, table)
+    # def importRedShift(self, table):
+    #    manifest_file = "%s/%s.txt.manifest" % (self.destination, table)
+    #    try:
+    #        redshift = RedShift()
+    #        redshift.cloneTable(str(table), self.metadata)
+    #        redshift.importS3(table, manifest_file)
+    #    except (SQLAlchemyError, Exception) as e:
+    #        print("Erro na importação RDS para S3: %s" % e)
+
+    def export2RedShift(self, table):
         try:
+            manifest_file = "%s/%s.txt.manifest" % (self.destination, table)
             redshift = RedShift()
             redshift.cloneTable(str(table), self.metadata)
-            redshift.importS3(table, manifest_file)
+            if self.exportData(table):
+                redshift.importS3(table, manifest_file)
+            else:
+                print("Cannot export export data from table %s " % table)
         except (SQLAlchemyError, Exception) as e:
             print("Erro na importação RDS para S3: %s" % e)
-
-    def processAll(self, table):
-        if self.exportData(table):
-            self.importRedShift(table)
-        else:
-            print("Cannot export export data from table %s " % table)
 
     def run(self):
         try:
@@ -98,7 +104,7 @@ class Main:
 
                             print("Preparing thread to table %s " % table)
                             # t = Thread(target=self.processAll, args=(table))
-                            t = threading.Thread(target=self.processAll, args=(table,))
+                            t = threading.Thread(target=self.export2RedShift, args=(table,))
                             thread_list.append(t)
 
                         # And now I will processing step by step in rule of cfg_thread_number...
@@ -130,12 +136,12 @@ class Main:
 
                     if table in config.source['tables']['exclude_tables']:
                         continue
-                    self.processAll(table)
+                    self.export2RedShift(table)
 
             else:
                 for table in tables.split(','):
                     print("Processing custom tables... Table: %s" % table)
-                    self.processAll(table)
+                    self.export2RedShift(table)
         except (SQLAlchemyError, Exception) as e:
             print("Error: %s" % e)
 

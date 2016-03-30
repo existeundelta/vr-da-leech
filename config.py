@@ -30,5 +30,5 @@ streaming = dict(
     resultset_size=10,
     method='s3',  # S3 or Local
     delimiter=';',
-    thread='0',
+    thread='2',
 )
