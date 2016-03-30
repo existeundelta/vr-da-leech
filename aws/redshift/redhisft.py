@@ -81,17 +81,20 @@ class RedShift:
             Session = sessionmaker(bind=self.redshift_engine)
             # text(strcopy)
 
-            s = Session()
+            session = Session()
             print()
             print('-----')
             print("Runing COPY FROM manifest file %s " % manifest_file)
             # time.sleep(5)
-            s.execute(strcopy)
-            s.commit()
+            session.execute(strcopy)
+            session.commit()
             # conn.execute(text(strcopy))
             # print(result)
             print("Cool... Table %s Imported with successful :)" % table)
             print('-----')
 
+
         except (SQLAlchemyError, Exception) as e:
             print("Error on LOAD manifest %s: %s" % (manifest_file, e))
+        finally:
+            session.close()
