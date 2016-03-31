@@ -58,7 +58,7 @@ class Main:
             session = Session()
             filename = self.destination + '/' + table + '.txt'
             streaming = StreamingFile()
-            print("Clean spool folder...")
+            print("Clean spool folder...%s" % table)
             streaming.cleanFolder(table)
             print("Streaming resulset to filename %s" % filename)
             exported = streaming.save(ORMTools.page_query(session.query(t)), filename)
