@@ -99,8 +99,9 @@ class StreamingFile():
                 if type(row) is list or type(row) is tuple:
                     for line in row:
                         if not line == None:
-                            amount_line += 1
                             fout.write(line + '\n')
+                            amount_line += 1
+
                 else:
                     fout.write(str(row) + '\n')
                     # amount_line = len(row)
@@ -124,7 +125,7 @@ class StreamingFile():
         self.resultset = resultset
         self.destination = filename
 
-        rows = blist()
+        rows = []
         file_index = 0
         row_size = 0
         resultset_line = 0
@@ -161,7 +162,7 @@ class StreamingFile():
                     if self.cfg_method == 's3':
                         print()
                         print("Saving in S3...")
-                        self.savesS3(blist(rows), filename)
+                        self.savesS3(rows, filename)
                     elif self.cfg_method == 'local':
                         print()
                         print("Saving in local...")

@@ -19,14 +19,14 @@ source = dict(
     database='analytics',
     schema='dw',
     tables=dict(
-        custom_tables='',
+        custom_tables='dw_sf_account',
         exclude_tables='',
     )
 )
 
 streaming = dict(
     folder_or_bucket='vr-leech-spool',
-    split_size=1000000,  # 1M em lead
+    split_size=5000000,  # 1M em lead
     resultset_size=0,
     method='s3',  # S3 or Local
     delimiter=';',
