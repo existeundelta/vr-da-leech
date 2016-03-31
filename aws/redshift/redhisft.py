@@ -95,6 +95,9 @@ class RedShift:
 
 
         except (SQLAlchemyError, Exception) as e:
-            print("Error on LOAD manifest %s: %s" % (manifest_file, e))
+            error = "Error on LOAD manifest %s: %s" % (manifest_file, e)
+            with open("redshift_import-error.log", "a") as error_log:
+                error_log.write(error)
+            print(error)
         finally:
             session.close()

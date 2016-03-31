@@ -27,7 +27,10 @@ class StreamingFile():
         urls = []
         urls.append({'url': 's3://' + self.destination, 'mandatory': True})
         for idx in range(number_of_files):
-            filename = self.destination + "." + str(idx)
+            if idx == 0:
+                continue
+            else:
+                filename = self.destination + "." + str(idx)
             urls.append({'url': 's3://' + filename, 'mandatory': True})
         container = {}
         container['entries'] = urls
@@ -86,7 +89,6 @@ class StreamingFile():
         if self.cfg_method == 's3':
             self.cleanS3ALL()
 
-
     def savesS3(self, row, filename):
         # uri = `s3://my_aws_key_id:key_secret@my_bucket/lines.txt`
         uri = "s3://%s:%s@%s" % (self.aws_access_key_id, self.aws_secret_access_key, filename)
@@ -96,8 +98,9 @@ class StreamingFile():
             with smart_open(uri, 'wb') as fout:
                 if type(row) is list or type(row) is tuple:
                     for line in row:
-                        amount_line += 1
-                        fout.write(line + '\n')
+                        if not line == None:
+                            amount_line += 1
+                            fout.write(line + '\n')
                 else:
                     fout.write(str(row) + '\n')
                     # amount_line = len(row)
@@ -121,12 +124,13 @@ class StreamingFile():
         self.resultset = resultset
         self.destination = filename
 
-        rows = []
+        rows = blist()
         file_index = 0
         row_size = 0
         resultset_line = 0
         filename = self.destination
         saved = False
+
         for row in self.resultset:
             saved = True
             # converting database row to delimited text row
@@ -157,7 +161,8 @@ class StreamingFile():
                     if self.cfg_method == 's3':
                         print()
                         print("Saving in S3...")
-                        self.savesS3(rows, filename)
+                        truncate = row_size + 1
+                        self.savesS3(rows[:truncate], filename)
                     elif self.cfg_method == 'local':
                         print()
                         print("Saving in local...")

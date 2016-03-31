@@ -5,7 +5,20 @@ from sqlalchemy.ext.automap import automap_base
 from tools.streaming import *
 from tools import ORMTools
 from aws.redshift.redhisft import *
+from functools import wraps
+from time import time
 
+
+def timed(f):
+    @wraps(f)
+    def wrapper(*args, **kwds):
+        start = time()
+        result = f(*args, **kwds)
+        elapsed = time() - start
+        print("%s took %d time to finish" % (f.__name__, elapsed))
+        return result
+
+    return wrapper
 
 class Main:
     source_endpoint = config.source['endpoint']
@@ -64,13 +77,15 @@ class Main:
     #    except (SQLAlchemyError, Exception) as e:
     #        print("Erro na importação RDS para S3: %s" % e)
 
+    # @timed
     def export2RedShift(self, table):
         try:
             manifest_file = "%s/%s.txt.manifest" % (self.destination, table)
-            redshift = RedShift()
-            redshift.cloneTable(str(table), self.metadata)
+            # redshift = RedShift()
+            #redshift.cloneTable(str(table), self.metadata)
             if self.exportData(table):
-                redshift.importS3(table, manifest_file)
+                print("Importing...")
+                #redshift.importS3(table, manifest_file)
             else:
                 print("Cannot export export data from table %s " % table)
         except (SQLAlchemyError, Exception) as e:
@@ -92,41 +107,60 @@ class Main:
                 # I will working with threads here...
                 thread_list = []
                 if str(self.cfg_thread_number).isdigit() or (not self.cfg_thread_number == '') or (
-                not self.cfg_thread_number == None):
-                    if int(self.cfg_thread_number) > 0:
-                        # Making list of threads with for all tables...
-                        for table in MetaTable.keys():
-                            if '.' in table:
-                                table = str(table).split('.')[1]
+                        not self.cfg_thread_number == None) and int(self.cfg_thread_number) > 0:
+                    # Making list of threads with for all tables...
+                    # And now I will processing step by step in rule of cfg_thread_number...
+                    # for thread in thread_list:
+                    #    if int(self.cfg_thread_number) > amount_threads_running:
+                    #        print("Processing thread  %s in paralell " % amount_threads_running)
+                    #        thread.start()
+                    #        threads_running.append(thread)
+                    #        amount_threads_running += 1
+                    #    else:
+                    #        for running in threads_running:
+                    #            if not running.isAlive():
+                    #            #    print("Waiting thread %s finish" % amount_threads_running)
+                    #            #    running.join()
+                    #            #    amount_threads_running -= 1
+                    #            #else:
+                    #                print("Finish...")
+                    #                amount_threads_running -= 1
+                    #                threads_running.remove(running)
+                    #                #continue
+                    #       threads_running.clear()
+                    # exit(0)  # Happy end...
+                    for table in MetaTable.keys():
+                        if '.' in table:
+                            table = str(table).split('.')[1]
 
-                            if table in config.source['tables']['exclude_tables']:
-                                continue
+                        if table in config.source['tables']['exclude_tables']:
+                            continue
 
-                            print("Preparing thread to table %s " % table)
-                            # t = Thread(target=self.processAll, args=(table))
-                            t = threading.Thread(target=self.export2RedShift, args=(table,))
-                            thread_list.append(t)
+                        print("Preparing thread to table %s " % table)
+                        # t = Thread(target=self.processAll, args=(table))
+                        t = threading.Thread(target=self.export2RedShift, args=(table,))
+                        thread_list.append(t)
 
-                        # And now I will processing step by step in rule of cfg_thread_number...
-                        threads_running = []
-                        amount_threads_running = 0
-                        for thread in thread_list:
+                    threads_running = []
+                    amount_threads_running = 0
+                    while True:
+                        if (len(thread_list)) > 0:
                             if int(self.cfg_thread_number) > amount_threads_running:
-                                print("Processing thread  %s in paralell " % amount_threads_running)
-                                thread.start()
-                                threads_running.append(thread)
-                                amount_threads_running += 1
+                                for thread in thread_list:
+                                    thread.start()
+                                    amount_threads_running += 1
+                                    threads_running.append(thread)
+                                    if int(amount_threads_running) > int(self.cfg_thread_number):
+                                        break
                             else:
                                 for running in threads_running:
-                                    if running.isAlive():
-                                        print("Waiting thread %s finish" % amount_threads_running)
-                                        running.join()
+                                    if not running.isAlive():
                                         amount_threads_running -= 1
-                                    else:
-                                        amount_threads_running -= 1
-                                        continue
-                                threads_running.clear()
-                        exit(0)  # Happy end...
+                                        thread_list.remove(running)
+                                        threads_running.remove(running)
+                        else:
+                            break
+                    print("Finish...")
 
                 # Without Threads...  Working in sequencial mode...
                 for table in MetaTable.keys():
