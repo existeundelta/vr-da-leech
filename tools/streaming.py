@@ -161,8 +161,7 @@ class StreamingFile():
                     if self.cfg_method == 's3':
                         print()
                         print("Saving in S3...")
-                        truncate = row_size + 1
-                        self.savesS3(rows[:truncate], filename)
+                        self.savesS3(blist(rows), filename)
                     elif self.cfg_method == 'local':
                         print()
                         print("Saving in local...")
