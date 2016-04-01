@@ -1,3 +1,4 @@
+from blist import blist
 from boto.exception import *
 from smart_open import *
 
@@ -62,8 +63,6 @@ class StreamingFile():
                 self.cfg_folder_bucket)
             for key, content in s3_iter_bucket(bucket, accept_key=lambda key: key.startswith(filename),
                                                workers=int(self.cfg_streaming_thread)):
-                # t = threading.Thread(target=self.animate("Deleting  S3 files: ", str(key) + " size: " + str(len(content)) + " bytes"))
-                # t.start()
                 msg = "\r -> Deleting S3 Files: %s " % str(key)
                 sys.stdout.write(msg)
                 sys.stdout.flush()
@@ -81,9 +80,14 @@ class StreamingFile():
             bucket.delete_keys(key.name)
             print("%s deleted..." % key.name)
 
+    def cleanLocal(self, filename):
+        pass
+
     def cleanFolder(self, filename):
         if self.cfg_method == 's3':
             self.cleanS3(filename)
+        if self.cfg_method == 'local':
+            self.cleanLocal(filename)
 
     def cleanALL(self):
         if self.cfg_method == 's3':
@@ -96,12 +100,11 @@ class StreamingFile():
         try:
             amount_line = 0
             with smart_open(uri, 'wb') as fout:
-                if type(row) is list or type(row) is tuple:
+                if type(row) is list or type(row) is tuple or type(row) is blist:
                     for line in row:
                         if not line == None:
                             fout.write(line + '\n')
                             amount_line += 1
-
                 else:
                     fout.write(str(row) + '\n')
                     # amount_line = len(row)
@@ -115,8 +118,11 @@ class StreamingFile():
         try:
             amount_line = 0
             f = open(filename, 'w')
-            for line in row:
-                f.write(str(line) + '\n')
+            if type(row) is list or type(row) is tuple or type(row) is blist:
+                for line in row:
+                    f.write(str(line) + '\n')
+            else:
+                f.write(str(row) + '\n')
             print("Sucessful file %s with %s lines" % (filename, str(amount_line)))
         except Exception as e:
             print(e)
@@ -125,7 +131,7 @@ class StreamingFile():
         self.resultset = resultset
         self.destination = filename
 
-        rows = []
+        rows = blist()
         file_index = 0
         row_size = 0
         resultset_line = 0
@@ -159,11 +165,11 @@ class StreamingFile():
                 else:
                     if file_index > 0:
                         filename = self.destination + "." + str(file_index)
-                    if self.cfg_method == 's3':
+                    if self.cfg_method.lower() == 's3':
                         print()
                         print("Saving in S3...")
                         self.savesS3(rows, filename)
-                    elif self.cfg_method == 'local':
+                    elif self.cfg_method.lower() == 'local':
                         print()
                         print("Saving in local...")
                         self.saveLocalFile(rows, filename)
@@ -178,16 +184,18 @@ class StreamingFile():
             if file_index > 0:
                 file_index += 1
                 filename = self.destination + "." + str(file_index)
-            if self.cfg_method == 's3':
+            if self.cfg_method.lower() == 's3':
                 print("Streaming to AWS S3")
                 self.savesS3(rows, filename)
-            elif self.cfg_method == 'local':
+            elif self.cfg_method.lower() == 'local':
                 print("Streaming to Local")
                 self.saveLocalFile(rows, filename)
 
         rows.clear()
         # Make Manifest File
         manifest_file = self.destination + '.manifest'
-        self.savesS3(self.makeJsonManifest(file_index), manifest_file)
-        # def makeManifest(self, filename):
+        if self.cfg_method.lower() == 's3':
+            self.savesS3(self.makeJsonManifest(file_index), manifest_file)
+        if self.cfg_method.lower() == 'local':
+            self.saveLocalFile(self.makeJsonManifest(file_index), manifest_file)
         return saved

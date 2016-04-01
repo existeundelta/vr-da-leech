@@ -5,20 +5,8 @@ from sqlalchemy.ext.automap import automap_base
 from tools.streaming import *
 from tools import ORMTools
 from aws.redshift.redhisft import *
-from functools import wraps
-from time import time
+from sqlalchemy import MetaData
 
-
-def timed(f):
-    @wraps(f)
-    def wrapper(*args, **kwds):
-        start = time()
-        result = f(*args, **kwds)
-        elapsed = time() - start
-        print("%s took %d time to finish" % (f.__name__, elapsed))
-        return result
-
-    return wrapper
 
 class Main:
     source_endpoint = config.source['endpoint']
@@ -44,6 +32,7 @@ class Main:
         uri_engine = uri_engine + '://%s:%s@%s/%s' % (
             self.source_login, self.source_password, self.source_endpoint, self.source_database)
         self.engine = create_engine(uri_engine, echo=False)
+
         self.metadata = MetaData(bind=self.engine, schema=self.source_schema)
 
     def exportData(self, table):
@@ -58,8 +47,8 @@ class Main:
             session = Session()
             filename = self.destination + '/' + table + '.txt'
             streaming = StreamingFile()
-            print("Clean spool folder...%s" % table)
-            streaming.cleanFolder(table)
+            # print("Clean spool folder...%s" % table)
+            # streaming.cleanFolder(table)
             print("Streaming resulset to filename %s" % filename)
             exported = streaming.save(ORMTools.page_query(session.query(t)), filename)
         except (SQLAlchemyError, Exception) as e:
@@ -68,21 +57,12 @@ class Main:
             session.close()
             return exported
 
-    # def importRedShift(self, table):
-    #    manifest_file = "%s/%s.txt.manifest" % (self.destination, table)
-    #    try:
-    #        redshift = RedShift()
-    #        redshift.cloneTable(str(table), self.metadata)
-    #        redshift.importS3(table, manifest_file)
-    #    except (SQLAlchemyError, Exception) as e:
-    #        print("Erro na importação RDS para S3: %s" % e)
 
-    # @timed
     def export2RedShift(self, table):
         try:
             manifest_file = "%s/%s.txt.manifest" % (self.destination, table)
             redshift = RedShift()
-            redshift.cloneTable(str(table), self.metadata)
+            redshift.cloneTable(table, self.metadata)
             if self.exportData(table):
                 print("Importing...")
                 redshift.importS3(table, manifest_file)
@@ -93,42 +73,19 @@ class Main:
 
     def run(self):
         try:
+            print("Please waiting... Analyzing source database... please wait...")
+            ## AutoMap
+            self.metadata.reflect(self.engine)  # get columns from existing table
             tables = config.source['tables']['custom_tables']
-
+            Base = automap_base(bind=self.engine, metadata=self.metadata)
+            Base.prepare(self.engine, reflect=True)
+            MetaTable = Base.metadata.tables
             if tables == '' or tables == None:
-                print("Load Source tables... please wait...")
-                ## AutoMap
                 # conn = self.engine.connect()
-                self.metadata.reflect(self.engine)  # get columns from existing table
-                Base = automap_base(bind=self.engine, metadata=self.metadata)
-                Base.prepare(self.engine, reflect=True)
-                MetaTable = Base.metadata.tables
-
                 # I will working with threads here...
                 thread_list = []
                 if str(self.cfg_thread_number).isdigit() or (not self.cfg_thread_number == '') or (
                         not self.cfg_thread_number == None) and int(self.cfg_thread_number) > 0:
-                    # Making list of threads with for all tables...
-                    # And now I will processing step by step in rule of cfg_thread_number...
-                    # for thread in thread_list:
-                    #    if int(self.cfg_thread_number) > amount_threads_running:
-                    #        print("Processing thread  %s in paralell " % amount_threads_running)
-                    #        thread.start()
-                    #        threads_running.append(thread)
-                    #        amount_threads_running += 1
-                    #    else:
-                    #        for running in threads_running:
-                    #            if not running.isAlive():
-                    #            #    print("Waiting thread %s finish" % amount_threads_running)
-                    #            #    running.join()
-                    #            #    amount_threads_running -= 1
-                    #            #else:
-                    #                print("Finish...")
-                    #                amount_threads_running -= 1
-                    #                threads_running.remove(running)
-                    #                #continue
-                    #       threads_running.clear()
-                    # exit(0)  # Happy end...
                     for table in MetaTable.keys():
                         if '.' in table:
                             table = str(table).split('.')[1]
@@ -137,7 +94,6 @@ class Main:
                             continue
 
                         print("Preparing thread to table %s " % table)
-                        # t = Thread(target=self.processAll, args=(table))
                         t = threading.Thread(target=self.export2RedShift, args=(table,))
                         thread_list.append(t)
 
@@ -150,7 +106,7 @@ class Main:
                                     thread.start()
                                     amount_threads_running += 1
                                     threads_running.append(thread)
-                                    if int(amount_threads_running) > int(self.cfg_thread_number):
+                                    if int(amount_threads_running) >= int(self.cfg_thread_number):
                                         break
                             else:
                                 for running in threads_running:

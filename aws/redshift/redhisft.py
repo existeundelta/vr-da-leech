@@ -49,8 +49,6 @@ class RedShift:
 
         print("Creating table %s on RedShift" % table_name)
         for column in srcTable.columns:
-            if (str(column) == "dw_blacklist.tipo"):
-                print("cheguei...")
             if ("varchar" in str(column.type).lower()) or ("text" in str(column.type).lower()) or (
                 "json" in str(column.type).lower()):
                 msg = "\r ->Change column type  of %s from  %s to VARCHAR(65535)" % (str(column), str(column.type))
