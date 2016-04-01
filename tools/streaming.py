@@ -182,7 +182,6 @@ class StreamingFile():
             print("")
             print("salva o resto...  %s linhas" % len(rows))
             if file_index > 0:
-                file_index += 1
                 filename = self.destination + "." + str(file_index)
             if self.cfg_method.lower() == 's3':
                 print("Streaming to AWS S3")
