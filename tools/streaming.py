@@ -1,3 +1,5 @@
+import re
+
 from blist import blist
 from boto.exception import *
 from smart_open import *
@@ -39,18 +41,17 @@ class StreamingFile():
 
     def formatROW(self, row):
         line_rebuild = ''
-        row_len = len(row) - 1
-        itemNull = False
+        row_len = len(row) - 1  # -1 is necessery by if idx < row_len
         for idx, item in enumerate(row):
-            # print("column: %s, item: %s" % (idx,item))
-
-            # if idx == 0 and item == 222:
-            #    print("Debug - cheguei")
             if (item == None) or (item == ''):
                 item = ''
-            if not str(item).isdigit():
+            elif not str(item).isdigit():
+                # Remove extra space and truncate if more then limit supported by varchar in RedShift
+                item = re.sub("\s\s+", " ", str(item))
+                item = (str(item)[:65517] + ' (...truncated...)') if len(str(item)) > 65535 else item
+                # Add quote in String
+                item = str(item).replace('"', "'")
                 item = '"{}"'.format(item)
-
             line_rebuild = line_rebuild + str(item).replace('\n', '\\n').replace('\r', '\\r').replace('\t', '\\t')
             if idx < row_len:
                 line_rebuild = line_rebuild + self.cfg_delimiter
@@ -140,9 +141,11 @@ class StreamingFile():
 
         for row in self.resultset:
             saved = True
-            # converting database row to delimited text row
-            row = self.formatROW(row)
-
+            try:
+                # converting database row to delimited text row
+                row = self.formatROW(row)
+            except Exception as e:
+                print("Error on format row: %s" % e)
             # If i want limit into number of sources row
             resultset_line += 1
             if (self.cfg_resultset_size != 0) and (resultset_line > self.cfg_resultset_size):
@@ -159,18 +162,16 @@ class StreamingFile():
                 if row_size < self.cfg_split_size:
                     rows.append((row))
                     row_size = row_size + 1
-                    msg = "\r -> Export line number: %s" % str(row_size)
+                    msg = "\r -> Exporting to file %s - line number: %s" % (self.destination, str(row_size))
                     sys.stdout.write(msg)
                     sys.stdout.flush()
                 else:
                     if file_index > 0:
                         filename = self.destination + "." + str(file_index)
                     if self.cfg_method.lower() == 's3':
-                        print()
-                        print("Saving in S3...")
+                        print("Saving in S3....")
                         self.savesS3(rows, filename)
                     elif self.cfg_method.lower() == 'local':
-                        print()
                         print("Saving in local...")
                         self.saveLocalFile(rows, filename)
                     row_size = 0
@@ -190,11 +191,13 @@ class StreamingFile():
                 print("Streaming to Local")
                 self.saveLocalFile(rows, filename)
 
-        rows.clear()
+        # rows.clear()
         # Make Manifest File
         manifest_file = self.destination + '.manifest'
         if self.cfg_method.lower() == 's3':
             self.savesS3(self.makeJsonManifest(file_index), manifest_file)
         if self.cfg_method.lower() == 'local':
             self.saveLocalFile(self.makeJsonManifest(file_index), manifest_file)
+
+        del rows
         return saved

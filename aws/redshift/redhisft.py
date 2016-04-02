@@ -88,14 +88,21 @@ class RedShift:
             session.commit()
             # conn.execute(text(strcopy))
             # print(result)
-            print("Cool... Table %s Imported with successful :)" % table)
+            sucess = "Cool... Table %s Imported with successful :) \n" % table
+            print(sucess)
             print('-----')
-
-
+            try:
+                with open("redshift_import-sucess.log", "a") as import_log:
+                    import_log.write(sucess)
+            except IOError as e:
+                print("Error on write in log file %s" % e)
         except (SQLAlchemyError, Exception) as e:
             error = "Error on LOAD manifest %s: %s" % (manifest_file, e)
-            with open("redshift_import-error.log", "a") as error_log:
-                error_log.write(error)
             print(error)
+            try:
+                with open("redshift_import-error.log", "a") as error_log:
+                    error_log.write(error)
+            except IOError as e:
+                print("Error on write in log file %s" % s)
         finally:
             session.close()

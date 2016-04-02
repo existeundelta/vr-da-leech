@@ -3,7 +3,7 @@ import threading
 from sqlalchemy.ext.automap import automap_base
 # internal packages
 from tools.streaming import *
-from tools import ORMTools
+from tools import Tools
 from aws.redshift.redhisft import *
 from sqlalchemy import MetaData
 
@@ -50,7 +50,7 @@ class Main:
             # print("Clean spool folder...%s" % table)
             # streaming.cleanFolder(table)
             print("Streaming resulset to filename %s" % filename)
-            exported = streaming.save(ORMTools.page_query(session.query(t)), filename)
+            exported = streaming.save(Tools.page_query(session.query(t)), filename)
         except (SQLAlchemyError, Exception) as e:
             print(e)
         finally:
@@ -80,58 +80,50 @@ class Main:
             Base = automap_base(bind=self.engine, metadata=self.metadata)
             Base.prepare(self.engine, reflect=True)
             MetaTable = Base.metadata.tables
-            if tables == '' or tables == None:
-                # conn = self.engine.connect()
-                # I will working with threads here...
-                thread_list = []
-                if str(self.cfg_thread_number).isdigit() or (not self.cfg_thread_number == '') or (
-                        not self.cfg_thread_number == None) and int(self.cfg_thread_number) > 0:
-                    for table in MetaTable.keys():
-                        if '.' in table:
-                            table = str(table).split('.')[1]
 
-                        if table in config.source['tables']['exclude_tables']:
-                            continue
+            if str(
+                    self.cfg_thread_number) == '' or self.cfg_thread_number == None or not self.cfg_thread_number.isdecimal():
+                self.cfg_thread_number = 1
 
-                        print("Preparing thread to table %s " % table)
-                        t = threading.Thread(target=self.export2RedShift, args=(table,))
-                        thread_list.append(t)
+            thread_list = []
+            ## From all tables found in database
+            for table in MetaTable.keys():
+                if '.' in table:
+                    table = str(table).split('.')[1]
 
-                    threads_running = []
-                    amount_threads_running = 0
-                    while True:
-                        if (len(thread_list)) > 0:
-                            if int(self.cfg_thread_number) > amount_threads_running:
-                                for thread in thread_list:
-                                    thread.start()
-                                    amount_threads_running += 1
-                                    threads_running.append(thread)
-                                    if int(amount_threads_running) >= int(self.cfg_thread_number):
-                                        break
-                            else:
-                                for running in threads_running:
-                                    if not running.isAlive():
-                                        amount_threads_running -= 1
-                                        thread_list.remove(running)
-                                        threads_running.remove(running)
-                        else:
-                            break
-                    print("Finish...")
-
-                # Without Threads...  Working in sequencial mode...
-                for table in MetaTable.keys():
-                    print("Prepara processing in table %s " % table)
-                    if '.' in table:
-                        table = str(table).split('.')[1]
-
-                    if table in config.source['tables']['exclude_tables']:
+                if len(config.source['tables']['exclude_tables']) > 0:
+                    if Tools.exactyMatchList(config.source['tables']['exclude_tables'], table):
                         continue
-                    self.export2RedShift(table)
 
-            else:
-                for table in tables.split(','):
-                    print("Processing custom tables... Table: %s" % table)
-                    self.export2RedShift(table)
+                ## From config.py custom_tables
+                if len(config.source['tables']['custom_tables']) > 0:
+                    if not Tools.exactyMatchList(config.source['tables']['custom_tables'], table):
+                        continue
+
+                print("Preparing thread to table %s " % table)
+                t = threading.Thread(target=self.export2RedShift, args=(table,))
+                thread_list.append(t)
+
+            threads_running = []
+            amount_threads_running = 0
+            while True:
+                if (len(thread_list)) > 0:
+                    if int(self.cfg_thread_number) > amount_threads_running:
+                        for thread in thread_list:
+                            thread.start()
+                            amount_threads_running += 1
+                            threads_running.append(thread)
+                            if int(amount_threads_running) >= int(self.cfg_thread_number):
+                                break
+                    else:
+                        for running in threads_running:
+                            if not running.isAlive():
+                                amount_threads_running -= 1
+                                thread_list.remove(running)
+                                threads_running.remove(running)
+                else:
+                    break
+            print("Finish...")
         except (SQLAlchemyError, Exception) as e:
             print("Error: %s" % e)
 
