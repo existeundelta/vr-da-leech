@@ -23,5 +23,4 @@ Leech will help you to make a firt data load from your big database to empity Re
 For mysql datasource you need include the mysqldb
 
 ### RoadMap
-- Work in paralalle threads
-- Make log file
+- Work with Python log

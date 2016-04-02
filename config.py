@@ -2,7 +2,7 @@ aws = dict(
     acceskey='AKIAJSM7XAJXT3XF7YKA',
     secretkey='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',
     redshift=dict(
-        endpoint='data-events.cmgmyz3fii98.us-east-1.redshift.amazonaws.com',
+        endpoint='10.110.3.39',
         port='5439',
         login='pdi',
         password='Password1',
@@ -19,7 +19,7 @@ source = dict(
     database='analytics',
     schema='dw',
     tables=dict(
-        custom_tables='dw_blacklist',
+        custom_tables='dw_development_debug, dw_listings_debug, dw_mongo_listing_deleted_debug',
         exclude_tables='',
     )
 )
@@ -30,5 +30,5 @@ streaming = dict(
     resultset_size=0,
     method='s3',  # S3 or Local
     delimiter=';',
-    thread='2',
+    thread='',
 )
