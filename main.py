@@ -1,4 +1,5 @@
 import threading
+import time
 
 from sqlalchemy.ext.automap import automap_base
 # internal packages
@@ -121,6 +122,8 @@ class Main:
                                 amount_threads_running -= 1
                                 thread_list.remove(running)
                                 threads_running.remove(running)
+                            else:
+                                time.sleep(5)
                 else:
                     break
             print("Finish...")
