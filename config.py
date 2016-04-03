@@ -13,22 +13,22 @@ aws = dict(
 
 source = dict(
     source_engine='postgresql', #mysql or others...
-    endpoint='db-analytics.vivareal.com',
+    endpoint='127.0.0.1', #db-analytics.vivareal.com
     login='pdi',
     password='password',
     database='analytics',
     schema='dw',
     tables=dict(
-        custom_tables='dw_development_debug, dw_listings_debug, dw_mongo_listing_deleted_debug',
+        custom_tables='dw_listings_debug',
         exclude_tables='',
     )
 )
 
 streaming = dict(
-    folder_or_bucket='vr-datanalytics-spool',
-    split_size=5000000,  # 1M em lead
+    folder_or_bucket='/Users/smaniotto/redshift', #'vr-datanalytics-spool', #'/Users/smaniotto/redshift', #'vr-datanalytics-spool', # #
+    split_size=0,  # 1M em lead
     resultset_size=0,
-    method='s3',  # S3 or Local
+    method='local',  # S3 or Local
     delimiter=';',
     thread='',
 )

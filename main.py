@@ -39,7 +39,6 @@ class Main:
 
     def exportData(self, table):
         t = Table(str(table), self.metadata, autoload=True, schema=self.source_schema)
-
         ## get all the results in a list of tuples
         exported = False
         try:
@@ -99,6 +98,7 @@ class Main:
                 thread_list.append(t)
 
             thread_control(thread_list, self.cfg_thread_number)
+            print("Finish...")
 
         except (SQLAlchemyError, Exception) as e:
             print("Error: %s" % e)
