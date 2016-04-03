@@ -59,11 +59,11 @@ class Main:
     def export2RedShift(self, table):
         try:
             manifest_file = "%s/%s.txt.manifest" % (self.destination, table)
-            # redshift = RedShift()
-            # redshift.cloneTable(table, self.metadata)
+            redshift = RedShift()
+            redshift.cloneTable(table, self.metadata)
             if self.exportData(table):
                 print("Importing...")
-                # redshift.importS3(table, manifest_file)
+                redshift.importS3(table, manifest_file)
             else:
                 print("Cannot export export data from table %s " % table)
         except (SQLAlchemyError, Exception) as e:
@@ -105,6 +105,11 @@ class Main:
 
 
 if __name__ == "__main__":
+    import sys
+
+    cmdargs = str(sys.argv)
+
+
     app = Main()
     app.run()
     # streaming = StreamingFile()
