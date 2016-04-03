@@ -19,7 +19,7 @@ source = dict(
     ,database='analytics'
     ,schema='dw'
     ,tables=dict(
-        custom_tables='dw_listings_debug'
+        custom_tables='dw_suahouse'
         ,exclude_tables='',
     )
 )

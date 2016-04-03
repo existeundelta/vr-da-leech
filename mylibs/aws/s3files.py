@@ -55,6 +55,8 @@ def saveS3(row, filename, formatString=False, limit=0):
                         msg = "\r Saved %s bytes in file %s" % (size, filename)
                         sys.stdout.write(msg)
                         sys.stdout.flush()
+                        sys.stdout.write("\r                                                       ")
+                        sys.stdout.flush()
                         if limit > amount_line:
                             break
                         amount_line += 1
