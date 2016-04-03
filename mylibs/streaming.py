@@ -73,8 +73,6 @@ class StreamingFile():
                     msg = "\r -> Joing to file %s - bytes: %s" % (self.destination, str(row_size))
                     sys.stdout.write(msg)
                     sys.stdout.flush()
-                    sys.stdout.write("\r                                                                            ")
-                    sys.stdout.flush()
                 else:
                     if file_index > 0:
                         filename = self.destination + "." + str(file_index)
