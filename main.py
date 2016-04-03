@@ -1,11 +1,11 @@
 import threading
 
 from sqlalchemy.ext.automap import automap_base
+from sqlalchemy import MetaData
 # internal packages
 from mylibs.streaming import *
 from mylibs.tools import *
 from mylibs.aws.redhisft import *
-from sqlalchemy import MetaData
 
 
 class Main:
