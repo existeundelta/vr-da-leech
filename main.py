@@ -1,11 +1,10 @@
 import threading
-import time
 
 from sqlalchemy.ext.automap import automap_base
 # internal packages
-from tools.streaming import *
-from tools import Tools
-from aws.redshift.redhisft import *
+from mylibs.streaming import *
+from mylibs.Tools import *
+from mylibs.aws.redhisft import *
 from sqlalchemy import MetaData
 
 
@@ -15,7 +14,7 @@ class Main:
     source_password = config.source['password']
     source_database = config.source['database']
     source_schema = config.source['schema']
-    source_tables = config.source['tables']
+    dsource_tables = config.source['tables']
     source_engine = config.source['source_engine']
     method = config.streaming['method']
     delimiter = config.streaming['delimiter']
@@ -33,8 +32,10 @@ class Main:
         uri_engine = uri_engine + '://%s:%s@%s/%s' % (
             self.source_login, self.source_password, self.source_endpoint, self.source_database)
         self.engine = create_engine(uri_engine, echo=False)
-
         self.metadata = MetaData(bind=self.engine, schema=self.source_schema)
+        if str(
+                self.cfg_thread_number) == '' or self.cfg_thread_number == None or not self.cfg_thread_number.isdecimal():
+            self.cfg_thread_number = 1
 
     def exportData(self, table):
         t = Table(str(table), self.metadata, autoload=True, schema=self.source_schema)
@@ -48,25 +49,22 @@ class Main:
             session = Session()
             filename = self.destination + '/' + table + '.txt'
             streaming = StreamingFile()
-            # print("Clean spool folder...%s" % table)
-            # streaming.cleanFolder(table)
             print("Streaming resulset to filename %s" % filename)
-            exported = streaming.save(Tools.page_query(session.query(t)), filename)
+            exported = streaming.save(page_query(session.query(t)), filename)
         except (SQLAlchemyError, Exception) as e:
             print(e)
         finally:
             session.close()
             return exported
 
-
     def export2RedShift(self, table):
         try:
             manifest_file = "%s/%s.txt.manifest" % (self.destination, table)
-            redshift = RedShift()
-            redshift.cloneTable(table, self.metadata)
+            # redshift = RedShift()
+            # redshift.cloneTable(table, self.metadata)
             if self.exportData(table):
                 print("Importing...")
-                redshift.importS3(table, manifest_file)
+                # redshift.importS3(table, manifest_file)
             else:
                 print("Cannot export export data from table %s " % table)
         except (SQLAlchemyError, Exception) as e:
@@ -77,14 +75,9 @@ class Main:
             print("Please waiting... Analyzing source database... please wait...")
             ## AutoMap
             self.metadata.reflect(self.engine)  # get columns from existing table
-            tables = config.source['tables']['custom_tables']
             Base = automap_base(bind=self.engine, metadata=self.metadata)
             Base.prepare(self.engine, reflect=True)
             MetaTable = Base.metadata.tables
-
-            if str(
-                    self.cfg_thread_number) == '' or self.cfg_thread_number == None or not self.cfg_thread_number.isdecimal():
-                self.cfg_thread_number = 1
 
             thread_list = []
             ## From all tables found in database
@@ -93,40 +86,20 @@ class Main:
                     table = str(table).split('.')[1]
 
                 if len(config.source['tables']['exclude_tables']) > 0:
-                    if Tools.exactyMatchList(config.source['tables']['exclude_tables'], table):
+                    if exactyMatchList(config.source['tables']['exclude_tables'], table):
                         continue
 
                 ## From config.py custom_tables
                 if len(config.source['tables']['custom_tables']) > 0:
-                    if not Tools.exactyMatchList(config.source['tables']['custom_tables'], table):
+                    if not exactyMatchList(config.source['tables']['custom_tables'], table):
                         continue
 
                 print("Preparing thread to table %s " % table)
-                t = threading.Thread(target=self.export2RedShift, args=(table,))
+                t = threading.Thread(target=self.export2RedShift, name='thread-' + table, args=(table,))
                 thread_list.append(t)
 
-            threads_running = []
-            amount_threads_running = 0
-            while True:
-                if (len(thread_list)) > 0:
-                    if int(self.cfg_thread_number) > amount_threads_running:
-                        for thread in thread_list:
-                            thread.start()
-                            amount_threads_running += 1
-                            threads_running.append(thread)
-                            if int(amount_threads_running) >= int(self.cfg_thread_number):
-                                break
-                    else:
-                        for running in threads_running:
-                            if not running.isAlive():
-                                amount_threads_running -= 1
-                                thread_list.remove(running)
-                                threads_running.remove(running)
-                            else:
-                                time.sleep(5)
-                else:
-                    break
-            print("Finish...")
+            thread_control(thread_list, self.cfg_thread_number)
+
         except (SQLAlchemyError, Exception) as e:
             print("Error: %s" % e)
 

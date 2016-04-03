@@ -4,9 +4,9 @@
 
 Redshift is a good way to analysis big informations :)
 
-AWS RedShift it' awesome :) But and now ? If I already have a tradicional relational data warehouse ?
+AWS RedShift it' awesome :) But and now ? If I already have a traditional relational data warehouse ?
 
-OK.. don't wory... Leech  will help you to migrate from tradicional database to RedShift :)
+OK.. don't wory... Leech  will help you to migrate from traditional database to RedShift :)
 
 ### Important.
 Remember: Leech is not a ELT tool!! To this purpose, i suggest use Pentaho PDI or Luiggi (Spotify).
