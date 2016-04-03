@@ -26,7 +26,7 @@ source = dict(
 
 streaming = dict(
     folder_or_bucket='vr-datanalytics-spool' #'/Users/smaniotto/redshift',
-    ,split_size=0 # 1M em lead
+    ,split_size=0 # bytes em lead 700000000
     ,resultset_size=0
     ,method='s3' # S3 or Local
     ,delimiter=';'
