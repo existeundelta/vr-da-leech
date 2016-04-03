@@ -59,7 +59,9 @@ class StreamingFile():
                 saved = saveLocalFile(resultset, filename, True, self.cfg_resultset_size)
         else:
             # Split File
+            size = 0
             for row in resultset:
+                size += size + sys.getsizeof(row)
                 saved = True
                 try:
                     # converting database row to delimited text row
@@ -67,10 +69,10 @@ class StreamingFile():
                 except Exception as e:
                     print("Error on format row: %s" % e)
                 # Split Files in cfg_split_size
-                if int(sys.getsizeof(rows)) < int(self.cfg_split_size):
+                if int(size) < int(self.cfg_split_size):
                     rows.append((row))
                     row_size = row_size + 1
-                    msg = "\r -> Joing to file %s - %s bytes" % (self.destination, str(sys.getsizeof(rows)))
+                    msg = "\r -> Joing to file %s - %s bytes" % (self.destination, str(size))
                     sys.stdout.write(msg)
                     sys.stdout.flush()
                 else:
