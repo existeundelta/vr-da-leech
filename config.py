@@ -19,14 +19,14 @@ source = dict(
     ,database='analytics'
     ,schema='dw'
     ,tables=dict(
-        custom_tables='dw_suahouse'
+        custom_tables='dw_listings_debug'
         ,exclude_tables='',
     )
 )
 
 streaming = dict(
     folder_or_bucket='vr-datanalytics-spool' #'/Users/smaniotto/redshift',
-    ,split_size=0 # bytes em lead 700000000
+    ,split_size=0 # bytes em lead 700.000.000 1.613.539
     ,resultset_size=0
     ,method='s3' # S3 or Local
     ,delimiter=';'

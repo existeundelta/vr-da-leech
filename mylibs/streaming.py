@@ -67,11 +67,13 @@ class StreamingFile():
                 except Exception as e:
                     print("Error on format row: %s" % e)
                 # Split Files in cfg_split_size
-                if len(rows) < int(self.cfg_split_size):
+                if int(sys.getsizeof(rows)) < int(self.cfg_split_size):
                     rows.append((row))
                     row_size = row_size + 1
                     msg = "\r -> Joing to file %s - bytes: %s" % (self.destination, str(row_size))
                     sys.stdout.write(msg)
+                    sys.stdout.flush()
+                    sys.stdout.write("\r                                                                            ")
                     sys.stdout.flush()
                 else:
                     if file_index > 0:
