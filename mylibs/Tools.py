@@ -55,4 +55,4 @@ def thread_control(thread_list=[], cfg_thread_number=1):
                         time.sleep(5)
         else:
             break
-    print("Finish...")
+
