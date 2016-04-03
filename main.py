@@ -3,7 +3,7 @@ import threading
 from sqlalchemy.ext.automap import automap_base
 # internal packages
 from mylibs.streaming import *
-from mylibs.Tools import *
+from mylibs.tools import *
 from mylibs.aws.redhisft import *
 from sqlalchemy import MetaData
 

@@ -2,9 +2,9 @@ import re
 
 from blist import blist
 
-from mylibs.Tools import *
 from mylibs.aws.s3files import *
 from mylibs.localfiles import *
+from mylibs.tools import *
 
 class StreamingFile():
     resultset = None
