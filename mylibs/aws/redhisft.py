@@ -50,7 +50,7 @@ class RedShift:
         print("Creating table %s on RedShift" % table_name)
         for column in srcTable.columns:
             if ("varchar" in str(column.type).lower()) or ("text" in str(column.type).lower()) or (
-                        "json" in str(column.type).lower()):
+                        "json" in str(column.type).lower() or "inte" in str(column.type).lower()):
                 msg = "\r ->Change column type  of %s from  %s to VARCHAR(65535)" % (str(column), str(column.type))
                 sys.stdout.write(msg)
                 sys.stdout.flush()
@@ -100,6 +100,6 @@ class RedShift:
                 with open("redshift_import-error.log", "a") as error_log:
                     error_log.write(error)
             except IOError as e:
-                print("Error on write in log file %s" % s)
+                print("Error on write in log file %s" % e)
         finally:
             session.close()

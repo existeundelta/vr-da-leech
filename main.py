@@ -33,9 +33,6 @@ class Main:
             self.source_login, self.source_password, self.source_endpoint, self.source_database)
         self.engine = create_engine(uri_engine, echo=False)
         self.metadata = MetaData(bind=self.engine, schema=self.source_schema)
-        if str(
-                self.cfg_thread_number) == '' or self.cfg_thread_number == None or not self.cfg_thread_number.isdecimal():
-            self.cfg_thread_number = 1
 
     def exportData(self, table):
         t = Table(str(table), self.metadata, autoload=True, schema=self.source_schema)
