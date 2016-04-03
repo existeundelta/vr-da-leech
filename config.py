@@ -13,13 +13,13 @@ aws = dict(
 
 source = dict(
     source_engine='postgresql' #mysql or others...
-    ,endpoint='127.0.0.1' #db-analytics.vivareal.com
+    ,endpoint='db-analytics.vivareal.com' #db-analytics.vivareal.com
     ,login='pdi'
     ,password='password'
     ,database='analytics'
     ,schema='dw'
     ,tables=dict(
-        custom_tables='dw_lead, dw_inmueble,dw_inmueble_eliminado,dw_ubicacion,dw_suscripcion,dw_suahouse,dw_responsys_programa,dw_responsys_bounce,dw_responsys_click,dw_responsys_complaint,dw_responsys_programa,dw_responsys_sent,dw_responsys_skipped'
+        custom_tables='dw_listings_debug'
         ,exclude_tables='',
     )
 )
@@ -30,5 +30,5 @@ streaming = dict(
     ,resultset_size=0
     ,method='s3' # S3 or Local
     ,delimiter=';'
-    ,thread='8'
+    ,thread='0'
 )

@@ -64,7 +64,7 @@ class Main:
             else:
                 print("Cannot export export data from table %s " % table)
         except (SQLAlchemyError, Exception) as e:
-            print("Erro na importação RDS para S3: %s" % e)
+            print("Error on import RDS to S3: %s" % e)
 
     def run(self):
         try:
