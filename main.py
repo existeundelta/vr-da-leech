@@ -34,10 +34,17 @@ class Main:
         self.engine = create_engine(uri_engine, echo=False)
         self.metadata = MetaData(bind=self.engine, schema=self.source_schema)
 
+
+    def rawSelect(self, table, session):
+        from sqlalchemy import text
+        sql = text('select * from %s.%s' % (self.source_schema, table))
+        return session.execute(sql)
+
     def exportData(self, table):
         t = Table(str(table), self.metadata, autoload=True, schema=self.source_schema)
         ## get all the results in a list of tuples
         exported = False
+        rawSelect = True
         try:
             # configure Session class with desired options
             Session = sessionmaker()
@@ -46,7 +53,10 @@ class Main:
             filename = self.destination + '/' + table + '.txt'
             streaming = StreamingFile()
             print("Streaming resulset to filename %s" % filename)
-            exported = streaming.save(page_query(session.query(t)), filename)
+            if rawSelect:
+                exported = streaming.save(self.rawSelect(table, session), filename)
+            else:
+                exported = streaming.save(page_query(session.query(t)), filename)
         except (SQLAlchemyError, Exception) as e:
             print(e)
         finally:
