@@ -80,7 +80,7 @@ def makeJsonManifest(number_of_files=0, destination=''):
         for idx in range(number_of_files):
             # To not write txt.0
             if idx == 0:
-                continue 
+                continue
             filename = destination + "." + str(idx)
             urls.append({'url': 's3://' + filename, 'mandatory': True})
     container = {}
