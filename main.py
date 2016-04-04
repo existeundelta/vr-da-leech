@@ -54,7 +54,7 @@ class Main:
             streaming = StreamingFile()
             print("Streaming resulset to filename %s" % filename)
             if rawSelect:
-                exported = streaming.save(self.rawSelect(table, session), filename)
+                exported = streaming.save(page_query(self.rawSelect(table, session)), filename)
             else:
                 exported = streaming.save(page_query(session.query(t)), filename)
         except (SQLAlchemyError, Exception) as e:
