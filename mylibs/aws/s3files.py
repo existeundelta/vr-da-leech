@@ -44,7 +44,7 @@ def saveS3(row, filename, formatString=False, limit=0):
         print("")
         with smart_open(uri, 'wb') as fout:
             # OR RESULT SET...
-            if type(row) is list or type(row) is tuple or type(row) is blist or inspect.isgenerator(row):
+            if (type(row) is list) or (type(row) is tuple) or (type(row) is blist or type(row) is blist.blist) or (inspect.isgenerator(row)):
                 for line in row:
                     if not line == None:
                         if formatString:

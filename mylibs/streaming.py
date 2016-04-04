@@ -41,6 +41,7 @@ class StreamingFile():
 
         file_index = 0
         row_size = 0
+        sjze_byte = 0
         resultset_line = 0
         filename = self.destination
         saved = False
@@ -59,7 +60,6 @@ class StreamingFile():
                 saved = saveLocalFile(resultset, filename, True, self.cfg_resultset_size)
         else:
             # Split File
-            row_size = 0
             for row in resultset:
                 saved = True
                 try:
@@ -68,16 +68,17 @@ class StreamingFile():
                 except Exception as e:
                     print("Error on format row: %s" % e)
                 # Split Files in cfg_split_size
-                # I don´t know why i need x 10000 but...
                 if int(row_size) < int(self.cfg_split_size):
-                    rows.append((row))
-                    row_size += (row_size + 1)
-                    msg = "\r -> Joing to file %s - %s rows" % (self.destination, str(row_size))
+                    rows.append(row)
+                    row_size += 1
+                    sjze_byte += sys.getsizeof(rows)
+                    msg = "\r -> Joing to file %s - %s rows - %s bytes" % (self.destination, str(row_size), str(sjze_byte))
                     sys.stdout.write(msg)
                     sys.stdout.flush()
                 else:
                     if file_index > 0:
                         filename = self.destination + "." + str(file_index)
+
                     if self.cfg_method.lower() == 's3':
                         print("Saving in S3....")
                         saveS3(rows, filename, False, self.cfg_resultset_size)
