@@ -64,7 +64,7 @@ def saveS3(row, filename, formatString=False, limit=0):
                 size = sys.getsizeof(row)
                 fout.write(str(row) + '\n')
                 # amount_line = len(row)
-        print("\n Sucessful file %s with %s bytes" % (filename, str(sys.getsizeof(row))))
+        print("\n Sucessful file %s writed " % (filename))
         # self.processing_finished = True
         return True
     except Exception as e:
@@ -78,6 +78,9 @@ def makeJsonManifest(number_of_files=0, destination=''):
     urls.append({'url': 's3://' + destination, 'mandatory': True})
     if number_of_files > 0:
         for idx in range(number_of_files):
+            # To not write txt.0
+            if idx == 0:
+                continue 
             filename = destination + "." + str(idx)
             urls.append({'url': 's3://' + filename, 'mandatory': True})
     container = {}
