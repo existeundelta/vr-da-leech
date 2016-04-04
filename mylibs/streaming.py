@@ -40,7 +40,7 @@ class StreamingFile():
         self.destination = filename
 
         file_index = 0
-        row_size = 0
+        list_size = 0
         resultset_line = 0
         filename = self.destination
         saved = False
@@ -59,9 +59,9 @@ class StreamingFile():
                 saved = saveLocalFile(resultset, filename, True, self.cfg_resultset_size)
         else:
             # Split File
-            size = 0
+            list_size = 0
             for row in resultset:
-                size += size + sys.getsizeof(row)
+                list_size += (list_size + 1)
                 saved = True
                 try:
                     # converting database row to delimited text row
@@ -69,10 +69,10 @@ class StreamingFile():
                 except Exception as e:
                     print("Error on format row: %s" % e)
                 # Split Files in cfg_split_size
-                if int(size) < int(self.cfg_split_size):
+                # I don´t know why i need x 10000 but...
+                if int(list_size) < int(self.cfg_split_size):
                     rows.append((row))
-                    row_size = row_size + 1
-                    msg = "\r -> Joing to file %s - %s bytes" % (self.destination, str(size))
+                    msg = "\r -> Joing to file %s - %s rows" % (self.destination, str(list_size))
                     sys.stdout.write(msg)
                     sys.stdout.flush()
                 else:
@@ -84,9 +84,9 @@ class StreamingFile():
                     elif self.cfg_method.lower() == 'local':
                         print("Saving in local...")
                         saveLocalFile(rows, filename, False, self.cfg_resultset_size)
-                    row_size = 0
                     file_index += 1
                     rows.clear()
+                    list_size = 0
 
             # If my rows list is not empty, so i need streaming to new file with the final data.
             if len(rows) > 0:

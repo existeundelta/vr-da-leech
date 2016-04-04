@@ -50,9 +50,9 @@ def saveS3(row, filename, formatString=False, limit=0):
                         if formatString:
                             line = formatROW(line)
                         line = str(line) + '\n'
-                        size += len(line)
+                        size += sys.getsizeof(line)
                         fout.write(line)
-                        msg = "\r Saved %s bytes in file %s" % (size, filename)
+                        msg = "\r Saved %s bytes in file %s" % (str(size), filename)
                         sys.stdout.write(msg)
                         sys.stdout.flush()
                         sys.stdout.write("\r                                                                            ")
@@ -61,10 +61,10 @@ def saveS3(row, filename, formatString=False, limit=0):
                             break
                         amount_line += 1
             else:
-                size = len(row)
+                size = sys.getsizeof(row)
                 fout.write(str(row) + '\n')
                 # amount_line = len(row)
-        print("\n Sucessful file %s with %s bytes" % (filename, size))
+        print("\n Sucessful file %s with %s bytes" % (filename, str(sys.getsizeof(row))))
         # self.processing_finished = True
         return True
     except Exception as e:
