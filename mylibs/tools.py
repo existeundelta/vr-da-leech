@@ -1,7 +1,7 @@
 import config
 
 def QUERY_LIMIT():  # Constant
-    return int(30000)
+    return int(1000)
 
 def page_query(q):
     offset = 0
