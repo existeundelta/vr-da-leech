@@ -72,7 +72,7 @@ class StreamingFile():
                     rows.append(row)
                     row_size += 1
                     sjze_byte += sys.getsizeof(rows)
-                    msg = "\r -> Joing to file %s - %s rows - %s bytes... " % (self.destination, str(row_size), str(sjze_byte))
+                    msg = "\r -> Joing to file %s - %s rows - %s bytes... " % (filename, str(row_size), str(sjze_byte))
                     sys.stdout.write(msg)
                     sys.stdout.flush()
                 else:
