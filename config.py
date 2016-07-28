@@ -1,22 +1,22 @@
 aws = dict(
-    acceskey='AKIAJSM7XAJXT3XF7YKA'
-    ,secretkey='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'
+    acceskey='AWSACCESS'
+    ,secretkey='AWS:SECRET'
     ,redshift=dict(
-        endpoint='data-events.cmgmyz3fii98.us-east-1.redshift.amazonaws.com'
+        endpoint='destinantion endpoin'
         ,port='5439'
-        ,login='pdi'
-        ,password='Password1'
-        ,database='analytics'
+        ,login=''
+        ,password=''
+        ,database=''
         ,schema='public'
     ),
 )
 
 source = dict(
     source_engine='postgresql' #mysql or others...
-    ,endpoint='db-analytics.vivareal.com' #db-analytics.vivareal.com
-    ,login='pdi'
-    ,password='password'
-    ,database='analytics'
+    ,endpoint='source endpoint' 
+    ,login=''
+    ,password=''
+    ,database=''
     ,schema='dw'
     ,tables=dict(
         custom_tables='dw_listings_debug'
@@ -25,7 +25,7 @@ source = dict(
 )
 
 streaming = dict(
-    folder_or_bucket='vr-datanalytics-spool' #'/Users/smaniotto/redshift',
+    folder_or_bucket='vr-datanalytics-spool' 
     ,split_size=0 # bytes em lead 700000000 1.613.539
     ,resultset_size=0
     ,method='s3' # S3 or Local
